@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: library-events-producer-v2
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        linger.ms: 10
+
+kafka:
+  topic:
+    name: library-events
