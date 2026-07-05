@@ -9,21 +9,21 @@ class LibraryEventSerializationTest {
 
     @Test
     void testBookCreationWithLombok() {
-        Book book = new Book(1, "The Great Gatsby", "F. Scott Fitzgerald");
+        Book book = new Book(1L, "The Great Gatsby", "F. Scott Fitzgerald");
         
         assertNotNull(book);
-        assertEquals(1, book.getBookId());
+        assertEquals(1L, book.getBookId());
         assertEquals("The Great Gatsby", book.getBookName());
         assertEquals("F. Scott Fitzgerald", book.getBookAuthor());
     }
 
     @Test
     void testLibraryEventCreation() {
-        Book book = new Book(1, "Clean Code", "Robert C. Martin");
-        LibraryEvent event = new LibraryEvent(101, EventType.ADD, book);
+        Book book = new Book(1L, "Clean Code", "Robert C. Martin");
+        LibraryEvent event = new LibraryEvent(101L, EventType.ADD, book);
         
         assertNotNull(event);
-        assertEquals(101, event.getLibraryEventId());
+        assertEquals(101L, event.getLibraryEventId());
         assertEquals(EventType.ADD, event.getEventType());
         assertNotNull(event.getBook());
         assertEquals("Clean Code", event.getBook().getBookName());
@@ -40,8 +40,8 @@ class LibraryEventSerializationTest {
     void testJsonSerialization() throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         
-        Book book = new Book(5, "Design Patterns", "Gang of Four");
-        LibraryEvent event = new LibraryEvent(201, EventType.UPDATE, book);
+        Book book = new Book(5L, "Design Patterns", "Gang of Four");
+        LibraryEvent event = new LibraryEvent(201L, EventType.UPDATE, book);
         
         String json = mapper.writeValueAsString(event);
         
@@ -59,7 +59,7 @@ class LibraryEventSerializationTest {
         
         LibraryEvent event = mapper.readValue(json, LibraryEvent.class);
         
-        assertEquals(301, event.getLibraryEventId());
+        assertEquals(301L, event.getLibraryEventId());
         assertEquals(EventType.ADD, event.getEventType());
         assertEquals(10, event.getBook().getBookId());
         assertEquals("Refactoring", event.getBook().getBookName());
@@ -80,19 +80,19 @@ class LibraryEventSerializationTest {
 
     @Test
     void testAllArgsConstructor() {
-        Book book = new Book(7, "Spring in Action", "Craig Walls");
-        LibraryEvent event = new LibraryEvent(401, EventType.ADD, book);
+        Book book = new Book(7L, "Spring in Action", "Craig Walls");
+        LibraryEvent event = new LibraryEvent(401L, EventType.ADD, book);
         
-        assertEquals(401, event.getLibraryEventId());
+        assertEquals(401L, event.getLibraryEventId());
         assertEquals(EventType.ADD, event.getEventType());
         assertEquals(book, event.getBook());
     }
 
     @Test
     void testLombokEqualsAndHashCode() {
-        Book book1 = new Book(1, "Book A", "Author A");
-        Book book2 = new Book(1, "Book A", "Author A");
-        Book book3 = new Book(2, "Book B", "Author B");
+        Book book1 = new Book(1L, "Book A", "Author A");
+        Book book2 = new Book(1L, "Book A", "Author A");
+        Book book3 = new Book(2L, "Book B", "Author B");
         
         assertEquals(book1, book2);
         assertNotEquals(book1, book3);
@@ -100,7 +100,7 @@ class LibraryEventSerializationTest {
 
     @Test
     void testLombokToString() {
-        Book book = new Book(1, "Test Book", "Test Author");
+        Book book = new Book(1L, "Test Book", "Test Author");
         String toString = book.toString();
         
         assertNotNull(toString);
