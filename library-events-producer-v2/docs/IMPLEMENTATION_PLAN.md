@@ -258,44 +258,52 @@ void sendLibraryEvent(LibraryEvent event) throws LibraryEventPublishException;
 
 ---
 
-### Phase 06: REST Controller (Endpoints) ⏳ PENDING
-**Status:** PENDING  
+### Phase 06: REST Controller (Endpoints) ✅ COMPLETED
+**Status:** COMPLETED  
 **Duration:** ~1-2 hours  
 **Dependencies:** Phase 04 (service)
 
-**Planned Deliverables:**
-- `src/main/java/com/arshad/controller/LibraryEventController.java` — REST endpoints
-- POST /v1/library-events — Publish ADD event (returns 201 Created)
-- PUT /v1/library-events — Publish UPDATE event (returns 200 OK)
-- Proper HTTP status codes and Location header for 201
+**Deliverables:**
+- ✅ `src/main/java/com/arshad/controller/LibraryEventController.java` — REST endpoints
+- ✅ POST /v1/library-events — Publish ADD event (returns 201 Created with Location header)
+- ✅ PUT /v1/library-events — Publish UPDATE event (returns 200 OK)
+- ✅ Proper HTTP status codes and Location header for 201
 
-**Key Decisions:**
-- Base path: /v1/library-events
-- Use @PostMapping and @PutMapping
-- Validate with @Valid annotation
-- Return ResponseEntity with appropriate status and body
-- No request ID param in URL (body-only)
+**Key Implementation Details:**
+- Base path: /v1/library-events (as planned)
+- Uses @PostMapping and @PutMapping (as planned)
+- Validates with @Valid annotation (as planned)
+- Returns ResponseEntity with appropriate status and body (as planned)
+- No request ID param in URL (body-only, as planned)
+- Injects LibraryEventService using @RequiredArgsConstructor
+- Includes structured logging for all requests and responses
 
-**Files to Create:**
+**Files Created:**
 ```
 src/main/java/com/arshad/controller/
 └── LibraryEventController.java
+
+src/test/java/com/arshad/controller/
+└── LibraryEventControllerTest.java (8 unit tests)
 ```
 
-**Planned Endpoints:**
-```java
-@PostMapping
-ResponseEntity<LibraryEvent> postLibraryEvent(@Valid @RequestBody LibraryEvent event)
-
-@PutMapping
-ResponseEntity<LibraryEvent> putLibraryEvent(@Valid @RequestBody LibraryEvent event)
-```
+**Test Coverage:**
+- ✅ POST with valid ADD event returns 201 Created
+- ✅ POST delegates to service.createLibraryEvent()
+- ✅ POST with service exception propagates exception
+- ✅ PUT with valid UPDATE event returns 200 OK
+- ✅ PUT delegates to service.updateLibraryEvent()
+- ✅ PUT with service exception propagates exception
+- ✅ POST returns event in response body with all fields
+- ✅ PUT returns event in response body with all fields
 
 **Acceptance Criteria:**
-- POST returns 201 Created with Location header
-- PUT returns 200 OK
-- Input validation triggered via @Valid
-- Both endpoints call service and return published event
+- ✅ POST returns 201 Created with Location header
+- ✅ PUT returns 200 OK
+- ✅ Input validation triggered via @Valid
+- ✅ Both endpoints call service and return published event
+- ✅ Location header format: /v1/library-events/{libraryEventId}
+- ✅ All 8 unit tests passing
 
 ---
 
@@ -539,9 +547,9 @@ docker-compose.yaml (if adding local Kafka setup)
 3. **Phase 03** → Validation ✅ COMPLETED
 4. **Phase 04** → Service (with Producer extraction) ✅ COMPLETED
 5. **Phase 05** → Producer (integrated into Phase 04) ✅ COMPLETED
-6. **Phase 06** → Controller (depends on 04) ⏳ PENDING
+6. **Phase 06** → Controller ✅ COMPLETED
 7. **Phase 07** → Error Handler (depends on 03, 04) ⏳ PENDING
-8. **Phase 08** → Unit Tests (partially complete, phase 06 still pending)
+8. **Phase 08** → Unit Tests (partial complete) ⏳ IN PROGRESS
 9. **Phase 09** → Integration Tests (depends on 05) ⏳ PENDING
 10. **Phase 10** → Observability (depends on 06) ⏳ PENDING
 11. **Phase 11** → Documentation (depends on 06) ⏳ PENDING
@@ -591,10 +599,9 @@ docker-compose.yaml (if adding local Kafka setup)
 - [x] Phase 04.1: Producer component extracted and integrated
 - [x] Phase 04.2: LibraryEventPublishException created and error handling implemented
 - [x] Phase 04.3: Method names refactored (createLibraryEvent/updateLibraryEvent)
-- [x] Phase 08 (Partial): Model + Service + Producer unit tests passing (60+ tests)
-- [ ] Phase 06: REST endpoints implemented
+- [x] Phase 06: REST endpoints implemented (POST/PUT working)
+- [x] Phase 08 (Partial): Model + Service + Producer + Controller unit tests passing (78+ tests)
 - [ ] Phase 07: Error handler catches all exceptions
-- [ ] Phase 08 (Complete): Controller tests (depends on Phase 06)
 - [ ] Phase 09: Integration tests pass with EmbeddedKafka
 - [ ] Phase 10: Metrics and logging working
 - [ ] Phase 11: README complete and accurate
