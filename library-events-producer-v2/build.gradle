@@ -30,9 +30,8 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	//developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 	//testing
-	testImplementation 'org.springframework.boot:spring-boot-starter-kafka-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework:spring-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
