@@ -4,6 +4,16 @@ import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 import java.lang.annotation.*;
 
+/**
+ * Custom Bean Validation constraint that ensures an {@link com.arshad.model.EventType} field
+ * holds a recognised value ({@code ADD} or {@code UPDATE}).
+ *
+ * <p>Usage:
+ * <pre>{@code
+ * @ValidEventType
+ * private EventType eventType;
+ * }</pre>
+ */
 @Documented
 @Constraint(validatedBy = EventTypeValidator.class)
 @Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})

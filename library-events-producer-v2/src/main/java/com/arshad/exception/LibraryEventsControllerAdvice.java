@@ -10,6 +10,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.List;
 
+/**
+ * Global exception handler for all controllers in the library events producer application.
+ *
+ * <p>Catches and maps domain and framework exceptions to structured {@link ErrorResponse} bodies,
+ * keeping error-handling logic out of individual controllers.
+ */
 @RestControllerAdvice
 @Slf4j
 public class LibraryEventsControllerAdvice {

@@ -15,6 +15,22 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Spring Kafka producer configuration.
+ *
+ * <p>Manually wires a {@link ProducerFactory} and {@link KafkaTemplate} with explicit
+ * producer settings sourced from application properties, rather than relying on
+ * Spring Boot's auto-configuration. This gives full control over serialization,
+ * idempotence, acknowledgement mode, and batching behaviour.
+ *
+ * <p>Key settings:
+ * <ul>
+ *   <li>Key serializer: {@link org.apache.kafka.common.serialization.LongSerializer}</li>
+ *   <li>Value serializer: {@link org.springframework.kafka.support.serializer.JsonSerializer}</li>
+ *   <li>Acknowledgement: configurable via {@code spring.kafka.producer.acks}</li>
+ *   <li>Idempotence: configurable via {@code spring.kafka.producer.properties.enable.idempotence}</li>
+ * </ul>
+ */
 @Configuration
 public class KafkaProducerConfig {
 
@@ -33,6 +49,11 @@ public class KafkaProducerConfig {
     @Value("${spring.kafka.producer.properties.linger.ms}")
     private Integer lingerMs;
 
+    /**
+     * Creates the Kafka {@link ProducerFactory} with all producer settings.
+     *
+     * @return a configured {@link DefaultKafkaProducerFactory}
+     */
     @Bean
     public ProducerFactory<Long, LibraryEvent> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
@@ -47,6 +68,11 @@ public class KafkaProducerConfig {
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
+    /**
+     * Creates the {@link KafkaTemplate} used by producers to send messages.
+     *
+     * @return a {@link KafkaTemplate} backed by the configured {@link #producerFactory()}
+     */
     @Bean
     public KafkaTemplate<Long, LibraryEvent> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
