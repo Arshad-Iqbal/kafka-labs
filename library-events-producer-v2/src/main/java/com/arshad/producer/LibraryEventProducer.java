@@ -22,8 +22,9 @@ import java.util.concurrent.TimeoutException;
  *
  * <p>Provides two publishing strategies:
  * <ul>
- *   <li><b>Asynchronous</b> ({@link #sendLibraryEvent}) — fire-and-forget; the caller returns
- *       immediately and the send result is handled via a {@code CompletableFuture} callback.</li>
+ *   <li><b>Asynchronous</b> ({@link #sendLibraryEvent}) — returns a {@code CompletableFuture}
+ *       that callers can chain via {@code thenApply} / {@code exceptionally}; the calling thread
+ *       is never blocked waiting for broker acknowledgement.</li>
  *   <li><b>Synchronous</b> ({@link #sendLibraryEventSynchronous}) — blocks the calling thread
  *       until the broker acknowledges the message (or a timeout / error occurs).</li>
  * </ul>
@@ -44,16 +45,20 @@ public class LibraryEventProducer {
     /**
      * Publishes a {@link LibraryEvent} to Kafka asynchronously.
      *
-     * <p>The message is enqueued immediately; the broker acknowledgement is handled in a
-     * background callback. Publish failures are only logged — the caller will not receive an
-     * exception for broker-side errors.
+     * <p>The message is enqueued immediately. The returned {@code CompletableFuture} completes
+     * with the broker {@link SendResult} on acknowledgement, or completes exceptionally if the
+     * broker rejects the record. Callers should chain further work via {@code thenApply} and
+     * handle failures via {@code exceptionally}.
      *
      * @param event the library event to publish; must not be {@code null}, and must have a
      *              non-null {@code libraryEventId} and {@code eventType}
+     * @return a {@code CompletableFuture} that completes with the {@link SendResult} on success,
+     *         or completes exceptionally if the broker rejects the message
      * @throws IllegalArgumentException     if {@code event}, its ID, or its type is {@code null}
-     * @throws LibraryEventPublishException if the message cannot be enqueued (e.g. serialization error)
+     * @throws LibraryEventPublishException if the message cannot be enqueued synchronously
+     *                                      (e.g. serialization failure before it reaches the broker)
      */
-    public void sendLibraryEvent(LibraryEvent event) {
+    public CompletableFuture<SendResult<Long, LibraryEvent>> sendLibraryEvent(LibraryEvent event) {
         if (event == null) {
             throw new IllegalArgumentException("Event cannot be null");
         }
@@ -85,7 +90,7 @@ public class LibraryEventProducer {
             );
         }
 
-        publishFuture.whenComplete((result, throwable) -> {
+        return publishFuture.whenComplete((result, throwable) -> {
             if (throwable != null) {
                 log.error("Failed to publish {} event for libraryEventId: {}", event.getEventType(), event.getLibraryEventId(), throwable);
                 return;

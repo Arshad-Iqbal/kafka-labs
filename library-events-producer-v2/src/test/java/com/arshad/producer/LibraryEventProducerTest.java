@@ -16,14 +16,11 @@ import org.springframework.messaging.Message;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class LibraryEventProducerTest {
@@ -46,16 +43,23 @@ class LibraryEventProducerTest {
     void sendLibraryEvent_sendsMessageAsync() {
         when(kafkaTemplate.send(any(Message.class))).thenReturn(successFuture());
 
-        libraryEventProducer.sendLibraryEvent(event);
+        CompletableFuture<SendResult<Long, LibraryEvent>> result = libraryEventProducer.sendLibraryEvent(event);
 
+        assertNotNull(result);
+        assertTrue(result.isDone());
+        assertFalse(result.isCompletedExceptionally());
         verify(kafkaTemplate, times(1)).send(any(Message.class));
     }
 
     @Test
-    void sendLibraryEvent_asyncFailureDoesNotThrow() {
+    void sendLibraryEvent_asyncFailureReturnsFailedFuture() {
         when(kafkaTemplate.send(any(Message.class))).thenReturn(failedFuture());
 
-        assertDoesNotThrow(() -> libraryEventProducer.sendLibraryEvent(event));
+        CompletableFuture<SendResult<Long, LibraryEvent>> result = libraryEventProducer.sendLibraryEvent(event);
+
+        assertNotNull(result);
+        assertTrue(result.isCompletedExceptionally());
+        assertThrows(CompletionException.class, result::join);
         verify(kafkaTemplate, times(1)).send(any(Message.class));
     }
 

@@ -12,14 +12,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.support.SendResult;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("LibraryEventService delegation tests")
@@ -42,7 +41,9 @@ class LibraryEventServiceImplTest {
 
     @Test
     void createLibraryEvent_setsEventTypeDelegatesAndReturnsEvent() {
-        LibraryEvent result = libraryEventService.createLibraryEvent(validAddEvent);
+        when(libraryEventProducer.sendLibraryEvent(validAddEvent)).thenReturn(successFuture());
+
+        LibraryEvent result = libraryEventService.createLibraryEvent(validAddEvent).join();
 
         assertSame(validAddEvent, result);
         assertEquals(EventType.ADD, result.getEventType());
@@ -51,7 +52,9 @@ class LibraryEventServiceImplTest {
 
     @Test
     void updateLibraryEvent_setsEventTypeDelegatesAndReturnsEvent() {
-        LibraryEvent result = libraryEventService.updateLibraryEvent(validUpdateEvent);
+        when(libraryEventProducer.sendLibraryEvent(validUpdateEvent)).thenReturn(successFuture());
+
+        LibraryEvent result = libraryEventService.updateLibraryEvent(validUpdateEvent).join();
 
         assertSame(validUpdateEvent, result);
         assertEquals(EventType.UPDATE, result.getEventType());
@@ -61,30 +64,40 @@ class LibraryEventServiceImplTest {
     @Test
     void createLibraryEvent_throwsForNullEvent() {
         assertThrows(IllegalArgumentException.class, () -> libraryEventService.createLibraryEvent(null));
-        verify(libraryEventProducer, never()).sendLibraryEvent(org.mockito.ArgumentMatchers.any());
+        verify(libraryEventProducer, never()).sendLibraryEvent(any());
     }
 
     @Test
     void updateLibraryEvent_throwsForNullEvent() {
         assertThrows(IllegalArgumentException.class, () -> libraryEventService.updateLibraryEvent(null));
-        verify(libraryEventProducer, never()).sendLibraryEvent(org.mockito.ArgumentMatchers.any());
+        verify(libraryEventProducer, never()).sendLibraryEvent(any());
     }
 
     @Test
     void createLibraryEvent_wrapsProducerPublishException() {
-        doThrow(new LibraryEventPublishException("producer failed"))
-                .when(libraryEventProducer).sendLibraryEvent(validAddEvent);
+        when(libraryEventProducer.sendLibraryEvent(validAddEvent))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("producer failed")));
 
-        assertThrows(LibraryEventPublishException.class, () -> libraryEventService.createLibraryEvent(validAddEvent));
+        CompletableFuture<LibraryEvent> result = libraryEventService.createLibraryEvent(validAddEvent);
+
+        CompletionException ex = assertThrows(CompletionException.class, result::join);
+        assertInstanceOf(LibraryEventPublishException.class, ex.getCause());
         verify(libraryEventProducer, times(1)).sendLibraryEvent(validAddEvent);
     }
 
     @Test
     void updateLibraryEvent_wrapsProducerPublishException() {
-        doThrow(new LibraryEventPublishException("producer failed"))
-                .when(libraryEventProducer).sendLibraryEvent(validUpdateEvent);
+        when(libraryEventProducer.sendLibraryEvent(validUpdateEvent))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("producer failed")));
 
-        assertThrows(LibraryEventPublishException.class, () -> libraryEventService.updateLibraryEvent(validUpdateEvent));
+        CompletableFuture<LibraryEvent> result = libraryEventService.updateLibraryEvent(validUpdateEvent);
+
+        CompletionException ex = assertThrows(CompletionException.class, result::join);
+        assertInstanceOf(LibraryEventPublishException.class, ex.getCause());
         verify(libraryEventProducer, times(1)).sendLibraryEvent(validUpdateEvent);
+    }
+
+    private CompletableFuture<SendResult<Long, LibraryEvent>> successFuture() {
+        return CompletableFuture.completedFuture(null);
     }
 }

@@ -9,9 +9,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * REST controller exposing endpoints to create and update library events.
+ *
+ * <p>Both endpoints return a {@code CompletableFuture}, enabling Spring MVC's async dispatch:
+ * the Servlet thread is released immediately after the future is returned, and the HTTP response
+ * is written once the Kafka broker acknowledges the message on the producer callback thread.
  *
  * <p>All requests are validated via Bean Validation ({@code @Valid}). Validation failures
  * and publish errors are handled globally by {@link com.arshad.exception.LibraryEventsControllerAdvice}.
@@ -30,32 +35,33 @@ public class LibraryEventController {
      * Creates a new library event and publishes it to Kafka with event type {@code ADD}.
      *
      * @param event the library event to create; must be a valid {@link LibraryEvent}
-     * @return {@code 201 Created} with the published event and a {@code Location} header
+     * @return a {@code CompletableFuture} that resolves to {@code 201 Created} with the
+     *         published event and a {@code Location} header on success
      */
     @PostMapping
-    public ResponseEntity<LibraryEvent> postLibraryEvent(@Valid @RequestBody LibraryEvent event) {
+    public CompletableFuture<ResponseEntity<LibraryEvent>> postLibraryEvent(@Valid @RequestBody LibraryEvent event) {
         log.info("POST request received to create library event: {}", event);
-        LibraryEvent publishedEvent = libraryEventService.createLibraryEvent(event);
-        
-        URI location = URI.create("/v1/library-events/" + publishedEvent.getLibraryEventId());
-        log.info("Library event created successfully with ID: {}", publishedEvent.getLibraryEventId());
-        
-        return ResponseEntity.created(location).body(publishedEvent);
+        return libraryEventService.createLibraryEvent(event)
+                .thenApply(publishedEvent -> {
+                    URI location = URI.create("/v1/library-events/" + publishedEvent.getLibraryEventId());
+                    log.info("Library event created successfully with ID: {}", publishedEvent.getLibraryEventId());
+                    return ResponseEntity.created(location).body(publishedEvent);
+                });
     }
 
     /**
      * Updates an existing library event and publishes it to Kafka with event type {@code UPDATE}.
      *
      * @param event the library event to update; must be a valid {@link LibraryEvent}
-     * @return {@code 200 OK} with the published event
+     * @return a {@code CompletableFuture} that resolves to {@code 200 OK} with the published event
      */
     @PutMapping
-    public ResponseEntity<LibraryEvent> putLibraryEvent(@Valid @RequestBody LibraryEvent event) {
+    public CompletableFuture<ResponseEntity<LibraryEvent>> putLibraryEvent(@Valid @RequestBody LibraryEvent event) {
         log.info("PUT request received to update library event: {}", event);
-        LibraryEvent publishedEvent = libraryEventService.updateLibraryEvent(event);
-        
-        log.info("Library event updated successfully with ID: {}", publishedEvent.getLibraryEventId());
-        
-        return ResponseEntity.ok(publishedEvent);
+        return libraryEventService.updateLibraryEvent(event)
+                .thenApply(publishedEvent -> {
+                    log.info("Library event updated successfully with ID: {}", publishedEvent.getLibraryEventId());
+                    return ResponseEntity.ok(publishedEvent);
+                });
     }
 }
