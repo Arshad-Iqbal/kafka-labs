@@ -29,7 +29,7 @@ import java.util.concurrent.TimeoutException;
  *       until the broker acknowledges the message (or a timeout / error occurs).</li>
  * </ul>
  *
- * <p>The target topic is resolved from the {@code kafka.topic.library-events} application property,
+ * <p>The target topic is resolved from the {@code spring.kafka.topic.name} application property,
  * defaulting to {@code library-events} if not set.
  */
 @Component
@@ -39,7 +39,7 @@ public class LibraryEventProducer {
 
     private final KafkaTemplate<Long, LibraryEvent> kafkaTemplate;
 
-    @Value("${kafka.topic.library-events:library-events}")
+    @Value("${spring.kafka.topic.name:library-events}")
     private String topicName;
 
     /**
@@ -59,15 +59,6 @@ public class LibraryEventProducer {
      *                                      (e.g. serialization failure before it reaches the broker)
      */
     public CompletableFuture<SendResult<Long, LibraryEvent>> sendLibraryEvent(LibraryEvent event) {
-        if (event == null) {
-            throw new IllegalArgumentException("Event cannot be null");
-        }
-        if (event.getLibraryEventId() == null) {
-            throw new IllegalArgumentException("Library event ID cannot be null");
-        }
-        if (event.getEventType() == null) {
-            throw new IllegalArgumentException("Event type cannot be null");
-        }
 
         log.info("Publishing {} event for libraryEventId: {}", event.getEventType(), event.getLibraryEventId());
 

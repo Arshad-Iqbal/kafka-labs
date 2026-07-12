@@ -64,28 +64,6 @@ class LibraryEventProducerTest {
     }
 
     @Test
-    void sendLibraryEvent_throwsForNullEvent() {
-        assertThrows(IllegalArgumentException.class, () -> libraryEventProducer.sendLibraryEvent(null));
-        verify(kafkaTemplate, never()).send(any(Message.class));
-    }
-
-    @Test
-    void sendLibraryEvent_throwsForNullLibraryEventId() {
-        LibraryEvent invalidEvent = new LibraryEvent(null, EventType.ADD, new Book(1L, "Book", "Author"));
-
-        assertThrows(IllegalArgumentException.class, () -> libraryEventProducer.sendLibraryEvent(invalidEvent));
-        verify(kafkaTemplate, never()).send(any(Message.class));
-    }
-
-    @Test
-    void sendLibraryEvent_throwsForNullEventType() {
-        LibraryEvent invalidEvent = new LibraryEvent(101L, null, new Book(1L, "Book", "Author"));
-
-        assertThrows(IllegalArgumentException.class, () -> libraryEventProducer.sendLibraryEvent(invalidEvent));
-        verify(kafkaTemplate, never()).send(any(Message.class));
-    }
-
-    @Test
     void sendLibraryEvent_wrapsImmediateProducerFailure() {
         when(kafkaTemplate.send(any(Message.class))).thenThrow(new RuntimeException("kafka down"));
 

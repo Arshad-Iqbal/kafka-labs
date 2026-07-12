@@ -54,6 +54,19 @@ public class LibraryEventsControllerAdvice {
     }
 
     /**
+     * Handles event-type mismatches (e.g. sending an UPDATE event to the POST endpoint).
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        List<String> errors = List.of(ex.getMessage());
+
+        log.warn("Invalid request argument: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), errors));
+    }
+
+    /**
      * Handles failures when publishing a library event to Kafka.
      */
     @ExceptionHandler(LibraryEventPublishException.class)
@@ -64,5 +77,18 @@ public class LibraryEventsControllerAdvice {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), errors));
+    }
+
+    /**
+     * Catch-all handler for any exception not matched by a more specific handler above.
+     * Returns a generic 500 response to avoid leaking internal details to the caller.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex) {
+        log.error("Unexpected error: {}", ex.getMessage(), ex);
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        List.of("An unexpected error occurred. Please try again later.")));
     }
 }

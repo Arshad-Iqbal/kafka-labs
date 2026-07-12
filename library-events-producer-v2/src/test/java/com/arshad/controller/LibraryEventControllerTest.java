@@ -43,13 +43,13 @@ class LibraryEventControllerTest {
 
     @Test
     @DisplayName("POST with valid ADD event returns 201 Created")
-    void testPostLibraryEventValid() {
+    void testCreateLibraryEventValid() {
         validLibraryEvent.setEventType(EventType.ADD);
         when(libraryEventService.createLibraryEvent(any(LibraryEvent.class)))
                 .thenReturn(CompletableFuture.completedFuture(validLibraryEvent));
 
         ResponseEntity<LibraryEvent> response = libraryEventController
-                .postLibraryEvent(validLibraryEvent).join();
+                .createLibraryEvent(validLibraryEvent).join();
 
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -61,23 +61,23 @@ class LibraryEventControllerTest {
 
     @Test
     @DisplayName("POST delegates to service.createLibraryEvent")
-    void testPostLibraryEventDelegation() {
+    void testCreateLibraryEventDelegation() {
         when(libraryEventService.createLibraryEvent(any(LibraryEvent.class)))
                 .thenReturn(CompletableFuture.completedFuture(validLibraryEvent));
 
-        libraryEventController.postLibraryEvent(validLibraryEvent).join();
+        libraryEventController.createLibraryEvent(validLibraryEvent).join();
 
         verify(libraryEventService, times(1)).createLibraryEvent(validLibraryEvent);
     }
 
     @Test
     @DisplayName("POST with service failure propagates exception via future")
-    void testPostLibraryEventServiceException() {
+    void testCreateLibraryEventServiceException() {
         when(libraryEventService.createLibraryEvent(any(LibraryEvent.class)))
                 .thenReturn(CompletableFuture.failedFuture(
                         new LibraryEventPublishException("Failed to publish ADD event", new RuntimeException("Kafka error"))));
 
-        CompletableFuture<ResponseEntity<LibraryEvent>> future = libraryEventController.postLibraryEvent(validLibraryEvent);
+        CompletableFuture<ResponseEntity<LibraryEvent>> future = libraryEventController.createLibraryEvent(validLibraryEvent);
 
         CompletionException ex = assertThrows(CompletionException.class, future::join);
         assertInstanceOf(LibraryEventPublishException.class, ex.getCause());
@@ -86,13 +86,13 @@ class LibraryEventControllerTest {
 
     @Test
     @DisplayName("PUT with valid UPDATE event returns 200 OK")
-    void testPutLibraryEventValid() {
+    void testUpdateLibraryEventValid() {
         validLibraryEvent.setEventType(EventType.UPDATE);
         when(libraryEventService.updateLibraryEvent(any(LibraryEvent.class)))
                 .thenReturn(CompletableFuture.completedFuture(validLibraryEvent));
 
         ResponseEntity<LibraryEvent> response = libraryEventController
-                .putLibraryEvent(validLibraryEvent).join();
+                .updateLibraryEvent(validLibraryEvent).join();
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -102,25 +102,25 @@ class LibraryEventControllerTest {
 
     @Test
     @DisplayName("PUT delegates to service.updateLibraryEvent")
-    void testPutLibraryEventDelegation() {
+    void testUpdateLibraryEventDelegation() {
         validLibraryEvent.setEventType(EventType.UPDATE);
         when(libraryEventService.updateLibraryEvent(any(LibraryEvent.class)))
                 .thenReturn(CompletableFuture.completedFuture(validLibraryEvent));
 
-        libraryEventController.putLibraryEvent(validLibraryEvent).join();
+        libraryEventController.updateLibraryEvent(validLibraryEvent).join();
 
         verify(libraryEventService, times(1)).updateLibraryEvent(validLibraryEvent);
     }
 
     @Test
     @DisplayName("PUT with service failure propagates exception via future")
-    void testPutLibraryEventServiceException() {
+    void testUpdateLibraryEventServiceException() {
         validLibraryEvent.setEventType(EventType.UPDATE);
         when(libraryEventService.updateLibraryEvent(any(LibraryEvent.class)))
                 .thenReturn(CompletableFuture.failedFuture(
                         new LibraryEventPublishException("Failed to publish UPDATE event", new RuntimeException("Kafka error"))));
 
-        CompletableFuture<ResponseEntity<LibraryEvent>> future = libraryEventController.putLibraryEvent(validLibraryEvent);
+        CompletableFuture<ResponseEntity<LibraryEvent>> future = libraryEventController.updateLibraryEvent(validLibraryEvent);
 
         CompletionException ex = assertThrows(CompletionException.class, future::join);
         assertInstanceOf(LibraryEventPublishException.class, ex.getCause());
@@ -129,12 +129,12 @@ class LibraryEventControllerTest {
 
     @Test
     @DisplayName("POST returns event in response body")
-    void testPostLibraryEventResponseBody() {
+    void testCreateLibraryEventResponseBody() {
         when(libraryEventService.createLibraryEvent(any(LibraryEvent.class)))
                 .thenReturn(CompletableFuture.completedFuture(validLibraryEvent));
 
         ResponseEntity<LibraryEvent> response = libraryEventController
-                .postLibraryEvent(validLibraryEvent).join();
+                .createLibraryEvent(validLibraryEvent).join();
 
         assertNotNull(response.getBody());
         assertEquals(100L, response.getBody().getLibraryEventId());
@@ -146,17 +146,37 @@ class LibraryEventControllerTest {
 
     @Test
     @DisplayName("PUT returns event in response body")
-    void testPutLibraryEventResponseBody() {
+    void testUpdateLibraryEventResponseBody() {
         validLibraryEvent.setEventType(EventType.UPDATE);
         when(libraryEventService.updateLibraryEvent(any(LibraryEvent.class)))
                 .thenReturn(CompletableFuture.completedFuture(validLibraryEvent));
 
         ResponseEntity<LibraryEvent> response = libraryEventController
-                .putLibraryEvent(validLibraryEvent).join();
+                .updateLibraryEvent(validLibraryEvent).join();
 
         assertNotNull(response.getBody());
         assertEquals(100L, response.getBody().getLibraryEventId());
         assertEquals(EventType.UPDATE, response.getBody().getEventType());
         assertEquals(1L, response.getBody().getBook().getBookId());
+    }
+
+    @Test
+    @DisplayName("POST with UPDATE event type throws IllegalArgumentException")
+    void testCreateLibraryEvent_rejectsUpdateEventType() {
+        validLibraryEvent.setEventType(EventType.UPDATE);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> libraryEventController.createLibraryEvent(validLibraryEvent));
+        verify(libraryEventService, never()).createLibraryEvent(any());
+    }
+
+    @Test
+    @DisplayName("PUT with ADD event type throws IllegalArgumentException")
+    void testUpdateLibraryEvent_rejectsAddEventType() {
+        validLibraryEvent.setEventType(EventType.ADD);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> libraryEventController.updateLibraryEvent(validLibraryEvent));
+        verify(libraryEventService, never()).updateLibraryEvent(any());
     }
 }

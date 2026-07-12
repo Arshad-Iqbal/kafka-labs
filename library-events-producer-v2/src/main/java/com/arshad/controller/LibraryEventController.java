@@ -1,5 +1,6 @@
 package com.arshad.controller;
 
+import com.arshad.model.EventType;
 import com.arshad.model.LibraryEvent;
 import com.arshad.service.LibraryEventService;
 import jakarta.validation.Valid;
@@ -39,8 +40,12 @@ public class LibraryEventController {
      *         published event and a {@code Location} header on success
      */
     @PostMapping
-    public CompletableFuture<ResponseEntity<LibraryEvent>> postLibraryEvent(@Valid @RequestBody LibraryEvent event) {
+    public CompletableFuture<ResponseEntity<LibraryEvent>> createLibraryEvent(@Valid @RequestBody LibraryEvent event) {
         log.info("POST request received to create library event: {}", event);
+        if (event.getEventType() != EventType.ADD) {
+            throw new IllegalArgumentException(
+                    "POST endpoint only accepts ADD events, but received: " + event.getEventType());
+        }
         return libraryEventService.createLibraryEvent(event)
                 .thenApply(publishedEvent -> {
                     URI location = URI.create("/v1/library-events/" + publishedEvent.getLibraryEventId());
@@ -56,8 +61,12 @@ public class LibraryEventController {
      * @return a {@code CompletableFuture} that resolves to {@code 200 OK} with the published event
      */
     @PutMapping
-    public CompletableFuture<ResponseEntity<LibraryEvent>> putLibraryEvent(@Valid @RequestBody LibraryEvent event) {
+    public CompletableFuture<ResponseEntity<LibraryEvent>> updateLibraryEvent(@Valid @RequestBody LibraryEvent event) {
         log.info("PUT request received to update library event: {}", event);
+        if (event.getEventType() != EventType.UPDATE) {
+            throw new IllegalArgumentException(
+                    "PUT endpoint only accepts UPDATE events, but received: " + event.getEventType());
+        }
         return libraryEventService.updateLibraryEvent(event)
                 .thenApply(publishedEvent -> {
                     log.info("Library event updated successfully with ID: {}", publishedEvent.getLibraryEventId());
