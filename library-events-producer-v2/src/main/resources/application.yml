@@ -1,16 +1,11 @@
 spring:
   application:
     name: library-events-producer-v2
+  profiles:
+    active: dev
   kafka:
-    bootstrap-servers: localhost:9092
     topic:
       name: library-events
     producer:
       key-serializer: org.apache.kafka.common.serialization.LongSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      acks: all
-      retries: 3
-      properties:
-        enable.idempotence: true
-        linger.ms: 10
-        retry.backoff.ms: 100

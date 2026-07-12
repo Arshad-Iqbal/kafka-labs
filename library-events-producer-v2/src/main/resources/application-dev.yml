@@ -1,0 +1,10 @@
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        linger.ms: 10
+        retry.backoff.ms: 100
