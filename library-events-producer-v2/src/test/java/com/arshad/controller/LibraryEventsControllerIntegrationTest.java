@@ -31,6 +31,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -174,6 +175,60 @@ class LibraryEventsControllerIntegrationTest {
         assertThat(record.key()).isEqualTo(200L);
         assertThat(record.value().getLibraryEventId()).isEqualTo(200L);
         assertThat(record.value().getEventType()).isEqualTo(EventType.ADD);
+        assertThat(record.value().getBook().getBookId()).isEqualTo(42L);
+        assertThat(record.value().getBook().getBookName()).isEqualTo("Designing Data-Intensive Applications");
+        assertThat(record.value().getBook().getBookAuthor()).isEqualTo("Martin Kleppmann");
+    }
+
+    @Test
+    @DisplayName("PUT with valid UPDATE event returns 200 OK and publishes the record to Kafka")
+    void updateLibraryEvent_validUpdateEvent_returns200AndPublishesToKafka() throws Exception {
+        Book book = new Book(1L, "Kafka in Action", "Dylan Scott");
+        LibraryEvent event = new LibraryEvent(100L, EventType.UPDATE, book);
+
+        MvcResult mvcResult = mockMvc.perform(put("/v1/library-events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(event)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.libraryEventId").value(100))
+                .andExpect(jsonPath("$.eventType").value("UPDATE"))
+                .andExpect(jsonPath("$.book.bookName").value("Kafka in Action"));
+
+        ConsumerRecord<Long, LibraryEvent> record = pollForRecord(100L);
+        assertThat(record.key()).isEqualTo(100L);
+        assertThat(record.value().getLibraryEventId()).isEqualTo(100L);
+        assertThat(record.value().getEventType()).isEqualTo(EventType.UPDATE);
+        assertThat(record.value().getBook().getBookId()).isEqualTo(1L);
+        assertThat(record.value().getBook().getBookName()).isEqualTo("Kafka in Action");
+        assertThat(record.value().getBook().getBookAuthor()).isEqualTo("Dylan Scott");
+    }
+
+    @Test
+    @DisplayName("PUT with a different valid UPDATE event returns 200 OK and publishes the record to Kafka")
+    void updateLibraryEvent_anotherValidUpdateEvent_returns200AndPublishesToKafka() throws Exception {
+        Book book = new Book(42L, "Designing Data-Intensive Applications", "Martin Kleppmann");
+        LibraryEvent event = new LibraryEvent(200L, EventType.UPDATE, book);
+
+        MvcResult mvcResult = mockMvc.perform(put("/v1/library-events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(event)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.libraryEventId").value(200))
+                .andExpect(jsonPath("$.eventType").value("UPDATE"))
+                .andExpect(jsonPath("$.book.bookName").value("Designing Data-Intensive Applications"));
+
+        ConsumerRecord<Long, LibraryEvent> record = pollForRecord(200L);
+        assertThat(record.key()).isEqualTo(200L);
+        assertThat(record.value().getLibraryEventId()).isEqualTo(200L);
+        assertThat(record.value().getEventType()).isEqualTo(EventType.UPDATE);
         assertThat(record.value().getBook().getBookId()).isEqualTo(42L);
         assertThat(record.value().getBook().getBookName()).isEqualTo("Designing Data-Intensive Applications");
         assertThat(record.value().getBook().getBookAuthor()).isEqualTo("Martin Kleppmann");
