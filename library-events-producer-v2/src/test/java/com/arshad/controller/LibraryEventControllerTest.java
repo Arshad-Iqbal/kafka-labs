@@ -85,6 +85,30 @@ class LibraryEventControllerTest {
     }
 
     @Test
+    @DisplayName("POST with service throwing synchronously propagates exception directly")
+    void testCreateLibraryEventServiceThrowsSynchronously() {
+        when(libraryEventService.createLibraryEvent(any(LibraryEvent.class)))
+                .thenThrow(new RuntimeException("Unexpected service failure"));
+
+        assertThrows(RuntimeException.class,
+                () -> libraryEventController.createLibraryEvent(validLibraryEvent));
+        verify(libraryEventService, times(1)).createLibraryEvent(any(LibraryEvent.class));
+    }
+
+    @Test
+    @DisplayName("POST with failed future wrapping unexpected exception propagates via future")
+    void testCreateLibraryEventUnexpectedAsyncException() {
+        when(libraryEventService.createLibraryEvent(any(LibraryEvent.class)))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Unexpected async failure")));
+
+        CompletableFuture<ResponseEntity<LibraryEvent>> future = libraryEventController.createLibraryEvent(validLibraryEvent);
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(RuntimeException.class, ex.getCause());
+        verify(libraryEventService, times(1)).createLibraryEvent(any(LibraryEvent.class));
+    }
+
+    @Test
     @DisplayName("PUT with valid UPDATE event returns 200 OK")
     void testUpdateLibraryEventValid() {
         validLibraryEvent.setEventType(EventType.UPDATE);
@@ -124,6 +148,32 @@ class LibraryEventControllerTest {
 
         CompletionException ex = assertThrows(CompletionException.class, future::join);
         assertInstanceOf(LibraryEventPublishException.class, ex.getCause());
+        verify(libraryEventService, times(1)).updateLibraryEvent(any(LibraryEvent.class));
+    }
+
+    @Test
+    @DisplayName("PUT with service throwing synchronously propagates exception directly")
+    void testUpdateLibraryEventServiceThrowsSynchronously() {
+        validLibraryEvent.setEventType(EventType.UPDATE);
+        when(libraryEventService.updateLibraryEvent(any(LibraryEvent.class)))
+                .thenThrow(new RuntimeException("Unexpected service failure"));
+
+        assertThrows(RuntimeException.class,
+                () -> libraryEventController.updateLibraryEvent(validLibraryEvent));
+        verify(libraryEventService, times(1)).updateLibraryEvent(any(LibraryEvent.class));
+    }
+
+    @Test
+    @DisplayName("PUT with failed future wrapping unexpected exception propagates via future")
+    void testUpdateLibraryEventUnexpectedAsyncException() {
+        validLibraryEvent.setEventType(EventType.UPDATE);
+        when(libraryEventService.updateLibraryEvent(any(LibraryEvent.class)))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Unexpected async failure")));
+
+        CompletableFuture<ResponseEntity<LibraryEvent>> future = libraryEventController.updateLibraryEvent(validLibraryEvent);
+
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertInstanceOf(RuntimeException.class, ex.getCause());
         verify(libraryEventService, times(1)).updateLibraryEvent(any(LibraryEvent.class));
     }
 
