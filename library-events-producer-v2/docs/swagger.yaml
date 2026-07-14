@@ -1,0 +1,156 @@
+openapi: 3.0.3
+info:
+  title: Library Events Producer API
+  version: 1.0.0
+  description: API for publishing library events to Kafka.
+servers:
+  - url: http://localhost:8080
+paths:
+  /v1/library-events:
+    post:
+      tags:
+        - Library Events
+      summary: Create library event
+      description: Accepts only ADD events and publishes them to Kafka.
+      operationId: createLibraryEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LibraryEvent'
+            examples:
+              addEvent:
+                value:
+                  libraryEventId: 1001
+                  eventType: ADD
+                  book:
+                    bookId: 501
+                    bookName: The Pragmatic Programmer
+                    bookAuthor: Andrew Hunt
+      responses:
+        '201':
+          description: Library event created successfully.
+          headers:
+            Location:
+              description: Resource location for the created event.
+              schema:
+                type: string
+                format: uri
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LibraryEvent'
+        '400':
+          description: Validation error or invalid event type for POST.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error or publish failure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - Library Events
+      summary: Update library event
+      description: Accepts only UPDATE events and publishes them to Kafka.
+      operationId: updateLibraryEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LibraryEvent'
+            examples:
+              updateEvent:
+                value:
+                  libraryEventId: 1001
+                  eventType: UPDATE
+                  book:
+                    bookId: 501
+                    bookName: Clean Code
+                    bookAuthor: Robert C. Martin
+      responses:
+        '200':
+          description: Library event updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LibraryEvent'
+        '400':
+          description: Validation error or invalid event type for PUT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected server error or publish failure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    LibraryEvent:
+      type: object
+      required:
+        - libraryEventId
+        - eventType
+        - book
+      properties:
+        libraryEventId:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Unique identifier for the library event.
+        eventType:
+          $ref: '#/components/schemas/EventType'
+        book:
+          $ref: '#/components/schemas/Book'
+    EventType:
+      type: string
+      enum:
+        - ADD
+        - UPDATE
+      description: Event operation type.
+    Book:
+      type: object
+      required:
+        - bookId
+        - bookName
+        - bookAuthor
+      properties:
+        bookId:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Unique identifier of the book.
+        bookName:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Book title.
+        bookAuthor:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Book author.
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - errors
+      properties:
+        status:
+          type: integer
+          format: int32
+          description: HTTP status code.
+        errors:
+          type: array
+          description: Human-readable error messages.
+          items:
+            type: string

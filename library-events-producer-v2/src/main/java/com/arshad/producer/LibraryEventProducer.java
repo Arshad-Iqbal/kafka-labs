@@ -60,12 +60,13 @@ public class LibraryEventProducer {
      */
     public CompletableFuture<SendResult<Long, LibraryEvent>> sendLibraryEvent(LibraryEvent event) {
 
-        log.info("Publishing {} event for libraryEventId: {}", event.getEventType(), event.getLibraryEventId());
+        Long key = event.getLibraryEventId();
+        log.info("Publishing {} event for libraryEventId: {}", event.getEventType(), key);
 
         Message<LibraryEvent> message = MessageBuilder
                 .withPayload(event)
                 .setHeader(KafkaHeaders.TOPIC, topicName)
-                .setHeader("kafka_messageKey", event.getLibraryEventId())
+                .setHeader("kafka_messageKey", key)
                 .setHeader("eventType", event.getEventType().name())
                 .build();
 
@@ -83,10 +84,17 @@ public class LibraryEventProducer {
 
         return publishFuture.whenComplete((result, throwable) -> {
             if (throwable != null) {
-                log.error("Failed to publish {} event for libraryEventId: {}", event.getEventType(), event.getLibraryEventId(), throwable);
-                return;
+                log.error("Failed to publish {} event for libraryEventId: {}", event.getEventType(), key, throwable);
+            } else {
+                // Some unit tests complete the async future with null SendResult; guard to avoid NPE in callback.
+                if (result != null && result.getRecordMetadata() != null) {
+                    var metadata = result.getRecordMetadata();
+                    log.info("Published LibraryEvent | topic={}, partition={}, offset={}, key={}",
+                            metadata.topic(), metadata.partition(), metadata.offset(), key);
+                } else {
+                    log.info("Successfully published {} event for libraryEventId: {}", event.getEventType(), key);
+                }
             }
-            log.info("Successfully published {} event for libraryEventId: {}", event.getEventType(), event.getLibraryEventId());
         });
     }
 
