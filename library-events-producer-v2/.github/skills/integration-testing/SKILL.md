@@ -1,3 +1,12 @@
+---
+name: integration-testing
+description: Write Spring Boot integration tests for a Kafka producer using EmbeddedKafka, MockMVC, and @SpringBootTest. Use when adding or updating integration tests.
+license: Apache-2.0
+metadata:
+  author: Arshad-Iqbal
+  version: "1.0"
+---
+
 # Integration Testing Skill — Kafka Producer App
 
 This skill describes how to write integration tests for a Spring Boot Kafka producer application.

@@ -132,6 +132,18 @@ springdoc:
 
 ---
 
+## Skills
+
+Reusable skill files provide detailed patterns and conventions for specific tasks.
+Consult the relevant skill before creating or modifying the corresponding code.
+
+| Skill | Path | When to use |
+|-------|------|-------------|
+| `controller-skill` | [`.github/skills/controller-skill/SKILL.md`](.github/skills/controller-skill/SKILL.md) | Creating or updating REST controllers — Kafka (`CompletableFuture`), DB (`ResponseEntity`), Bean Validation, `@RestControllerAdvice` error handling |
+| `integration-testing` | [`.github/skills/integration-testing/SKILL.md`](.github/skills/integration-testing/SKILL.md) | Writing integration tests — `@SpringBootTest`, `@EmbeddedKafka`, `MockMVC`, async-dispatch pattern, Kafka consumer verification |
+
+---
+
 ## What to Avoid
 
 - Do **not** modify files under `build/`, `.gradle/`, `.idea/`.
