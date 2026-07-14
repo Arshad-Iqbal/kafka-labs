@@ -1,0 +1,54 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.1.0'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.learnkafka'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	//jpa
+//	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	//kafka
+	implementation 'org.springframework.boot:spring-boot-starter-kafka'
+
+	//webmvc
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// Jackson 2.x for serialization (Spring Boot 4.x uses Jackson 3.x, but we need 2.x for explicit ObjectMapper usage)
+	// Version must align with jackson-annotations:2.20 constrained by the Jackson 3.x BOM
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.20.2'
+
+	//flyway
+//	implementation 'org.springframework.boot:spring-boot-starter-flyway'
+//	implementation 'org.flywaydb:flyway-database-postgresql'
+//	runtimeOnly 'org.postgresql:postgresql'
+
+
+//	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+//	testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
+//	testImplementation 'org.springframework.boot:spring-boot-starter-kafka-test'
+//	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+//	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+//	testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+//	testImplementation 'org.testcontainers:testcontainers-kafka'
+////	testImplementation 'org.testcontainers:testcontainers-postgresql'
+//	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
