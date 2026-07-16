@@ -1,5 +1,6 @@
 package com.learnkafka.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -11,6 +12,11 @@ import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 @Configuration
 @EnableKafka
 public class LibraryEventsConsumerConfig {
+
+    @Bean
+    ObjectMapper objectMapper() {
+        return new ObjectMapper();
+    }
 
     @Bean
     KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<Integer, String>>
