@@ -1,8 +1,11 @@
+server:
+  port: 8081
+
 spring:
   kafka:
     consumer:
       bootstrap-servers: localhost:9092
       group-id: library-events-listener-group
-      key-deserializer: org.apache.kafka.common.serialization.IntegerDeserializer
+      key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       auto-offset-reset: latest
