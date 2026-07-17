@@ -8,6 +8,7 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
+import org.springframework.kafka.listener.ContainerProperties;
 
 @Configuration
 @EnableKafka
@@ -24,6 +25,11 @@ public class LibraryEventsConsumerConfig {
 
         var factory = new ConcurrentKafkaListenerContainerFactory<Integer, String>();
         factory.setConsumerFactory(consumerFactory);
+        // Set acknowledgement mode to MANUAL — offsets are committed to Kafka on the next scheduled
+        // interval only after acknowledgment.acknowledge() is explicitly called in the listener.
+        // Default AckMode is BATCH — offsets are auto-committed after each poll batch is fully processed,
+        // without requiring any explicit acknowledgment call in the listener.
+        //factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
         return factory;
     }
 }
