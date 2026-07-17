@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
 	//jpa
-//	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
 	//kafka
 	implementation 'org.springframework.boot:spring-boot-starter-kafka'
@@ -37,20 +37,20 @@ dependencies {
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.20.2'
 
 	//flyway
-//	implementation 'org.springframework.boot:spring-boot-starter-flyway'
-//	implementation 'org.flywaydb:flyway-database-postgresql'
-//	runtimeOnly 'org.postgresql:postgresql'
+	implementation 'org.springframework.boot:spring-boot-starter-flyway'
+	implementation 'org.flywaydb:flyway-database-postgresql'
+	runtimeOnly 'org.postgresql:postgresql'
 
 
-//	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-//	testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
-//	testImplementation 'org.springframework.boot:spring-boot-starter-kafka-test'
-//	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-//	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-//	testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
-//	testImplementation 'org.testcontainers:testcontainers-kafka'
-////	testImplementation 'org.testcontainers:testcontainers-postgresql'
-//	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-kafka-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+	testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+	testImplementation 'org.testcontainers:testcontainers-kafka'
+//	testImplementation 'org.testcontainers:testcontainers-postgresql'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
