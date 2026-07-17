@@ -1,6 +1,6 @@
 package com.learnkafka.consumer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.learnkafka.model.LibraryEventDto;
 import com.learnkafka.service.LibraryEventService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
@@ -20,7 +20,8 @@ public class LibraryEventsConsumer {
     }
 
     @KafkaListener(topics = "library-events")
-    public void onMessage(ConsumerRecord<Long, String> consumerRecord) {
+    public void onMessage(ConsumerRecord<Long, LibraryEventDto> consumerRecord) {
+        //public void onMessage(ConsumerRecord<Long, String> consumerRecord) {
         log.info("topic={}, partition={}, offset={}, key={}, value={}",
                 consumerRecord.topic(),
                 consumerRecord.partition(),
