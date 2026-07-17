@@ -25,6 +25,9 @@ public class LibraryEventsConsumerConfig {
 
         var factory = new ConcurrentKafkaListenerContainerFactory<Integer, String>();
         factory.setConsumerFactory(consumerFactory);
+
+        //factory.setConcurrency(3); // Set concurrency to 3 — allows processing messages from 3 partitions concurrently.
+
         // Set acknowledgement mode to MANUAL — offsets are committed to Kafka on the next scheduled
         // interval only after acknowledgment.acknowledge() is explicitly called in the listener.
         // Default AckMode is BATCH — offsets are auto-committed after each poll batch is fully processed,

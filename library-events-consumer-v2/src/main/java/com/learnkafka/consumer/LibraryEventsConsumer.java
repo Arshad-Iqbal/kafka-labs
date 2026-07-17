@@ -23,7 +23,7 @@ public class LibraryEventsConsumer {
     @KafkaListener(topics = "library-events")
     public void onMessage(ConsumerRecord<Long, LibraryEventDto> consumerRecord) {
         //public void onMessage(ConsumerRecord<Long, String> consumerRecord, Acknowledgment acknowledgment) {
-        log.info("topic={}, partition={}, offset={}, key={}, value={}",
+        log.info("Event received: topic={}, partition={}, offset={}, key={}, value={}",
                 consumerRecord.topic(),
                 consumerRecord.partition(),
                 consumerRecord.offset(),
