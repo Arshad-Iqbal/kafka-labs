@@ -1,11 +1,11 @@
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 spring:
   kafka:
     consumer:
       bootstrap-servers: localhost:9092
-      group-id: library-events-listener-group
+      group-id: ${SPRING_KAFKA_CONSUMER_GROUP_ID:library-events-listener-group}
       key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
       #value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
