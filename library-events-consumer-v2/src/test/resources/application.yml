@@ -1,0 +1,23 @@
+server:
+  port: 0
+
+spring:
+  flyway:
+    clean-disabled: false
+    locations: classpath:db/migration
+  jpa:
+    hibernate:
+      ddl-auto: none
+  kafka:
+    listener:
+      poll-timeout: 100
+    consumer:
+      group-id: library-events-listener-group-test
+      key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "com.learnkafka.model"
+        spring.json.value.default.type: "com.learnkafka.model.LibraryEventDto"
+        spring.json.use.type.headers: false

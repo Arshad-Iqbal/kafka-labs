@@ -20,6 +20,13 @@ public class LibraryEventsConsumer {
         this.libraryEventService = libraryEventService;
     }
 
+    // Test -> Event to Kafka topic "library-events" -> onMessage -> libraryEventService.processEvent -> DB
+    // Check the DB and the event is persisted
+    // Test for ADD, UPDATE
+    // Test for Invalid Events
+    // Pass the book as null
+    // Update Event Type with null libraryEventId
+
     @KafkaListener(topics = "library-events")
     public void onMessage(ConsumerRecord<Long, LibraryEventDto> consumerRecord) {
         //public void onMessage(ConsumerRecord<Long, String> consumerRecord, Acknowledgment acknowledgment) {
