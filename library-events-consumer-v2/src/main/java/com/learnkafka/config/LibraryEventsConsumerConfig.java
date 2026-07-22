@@ -11,6 +11,8 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.CommonErrorHandler;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
 
 @Configuration
 @EnableKafka
@@ -29,8 +31,8 @@ public class LibraryEventsConsumerConfig {
         var factory = new ConcurrentKafkaListenerContainerFactory<Integer, String>();
         factory.setConsumerFactory(consumerFactory);
 
-        // Wire error handler if provided (e.g. by @TestConfiguration in tests)
-        errorHandler.ifAvailable(factory::setCommonErrorHandler);
+        // Use the provided error handler (e.g. from @TestConfiguration), or fall back to the default.
+        factory.setCommonErrorHandler(errorHandler.getIfAvailable(this::defaultErrorHandler));
 
         //factory.setConcurrency(3); // Set concurrency to 3 — allows processing messages from 3 partitions concurrently.
 
@@ -40,6 +42,13 @@ public class LibraryEventsConsumerConfig {
         // without requiring any explicit acknowledgment call in the listener.
         //factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
         return factory;
+    }
+
+    @Bean
+    public DefaultErrorHandler defaultErrorHandler() {
+        // Retry up to 2 times with a 1-second fixed interval, then skip the record.
+        var fixedBackOff = new FixedBackOff(1000L, 2);
+        return new DefaultErrorHandler(fixedBackOff);
     }
 }
 
