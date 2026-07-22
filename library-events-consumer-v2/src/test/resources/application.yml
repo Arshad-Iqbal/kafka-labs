@@ -21,3 +21,6 @@ spring:
         spring.json.trusted.packages: "com.learnkafka.model"
         spring.json.value.default.type: "com.learnkafka.model.LibraryEventDto"
         spring.json.use.type.headers: false
+        retry.backoff.ms: 1000
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5

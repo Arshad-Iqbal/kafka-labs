@@ -1,5 +1,6 @@
 package com.learnkafka.service;
 
+import com.learnkafka.dto.LibraryEventResponseDto;
 import com.learnkafka.entity.LibraryEvent;
 import com.learnkafka.mapper.LibraryEventMapper;
 import com.learnkafka.model.EventType;
@@ -13,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,6 +34,20 @@ public class LibraryEventService {
         this.libraryEventRepository = libraryEventRepository;
         this.libraryEventMapper = libraryEventMapper;
         this.validator = validator;
+    }
+
+    public List<LibraryEventResponseDto> findAll() {
+        log.info("Fetching all library events");
+        return libraryEventRepository.findAll()
+                .stream()
+                .map(LibraryEventMapper::toLibraryEventResponseDto)
+                .toList();
+    }
+
+    public Optional<LibraryEventResponseDto> findById(Integer libraryEventId) {
+        log.info("Fetching library event with id: {}", libraryEventId);
+        return libraryEventRepository.findById(libraryEventId)
+                .map(LibraryEventMapper::toLibraryEventResponseDto);
     }
 
     @Transactional

@@ -2,6 +2,7 @@ package com.learnkafka.mapper;
 
 import com.learnkafka.dto.BookDto;
 import com.learnkafka.dto.BookResponseDto;
+import com.learnkafka.dto.LibraryEventResponseDto;
 import com.learnkafka.entity.Book;
 import com.learnkafka.entity.LibraryEvent;
 import com.learnkafka.entity.LibraryEventType;
@@ -53,6 +54,17 @@ public class LibraryEventMapper {
                 libraryEventId,
                 book.getCreatedAt(),
                 book.getUpdatedAt()
+        );
+    }
+
+    public static LibraryEventResponseDto toLibraryEventResponseDto(LibraryEvent event) {
+        Integer bookId = event.getBook() != null ? event.getBook().getBookId() : null;
+        return new LibraryEventResponseDto(
+                event.getLibraryEventId(),
+                event.getEventType(),
+                bookId,
+                event.getCreatedAt(),
+                event.getUpdatedAt()
         );
     }
 }
