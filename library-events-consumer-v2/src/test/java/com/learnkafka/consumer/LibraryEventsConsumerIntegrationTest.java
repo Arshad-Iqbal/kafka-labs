@@ -15,8 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import com.learnkafka.TestcontainersConfiguration;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -26,7 +26,6 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.util.backoff.FixedBackOff;
-import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.util.HashMap;
 import java.util.List;
@@ -42,11 +41,8 @@ import static org.junit.jupiter.api.Assertions.*;
         topics = {"library-events"},
         bootstrapServersProperty = "spring.kafka.consumer.bootstrap-servers"
 )
-@ImportTestcontainers
+@ImportTestcontainers(TestcontainersConfiguration.class)
 class LibraryEventsConsumerIntegrationTest {
-
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest");
 
     @TestConfiguration
     static class TestConfig {

@@ -1,5 +1,6 @@
 package com.learnkafka.controller;
 
+import com.learnkafka.TestcontainersConfiguration;
 import com.learnkafka.dto.BookDto;
 import com.learnkafka.entity.Book;
 import com.learnkafka.entity.LibraryEvent;
@@ -11,11 +12,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.PostgreSQLContainer;
 import tools.jackson.databind.ObjectMapper;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -28,11 +27,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ImportTestcontainers
+@ImportTestcontainers(TestcontainersConfiguration.class)
 class BookControllerIntegrationTest {
-
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest");
 
     @Autowired
     private MockMvc mockMvc;

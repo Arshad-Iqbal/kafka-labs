@@ -28,6 +28,9 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
+	//openapi / swagger-ui
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
+
 	//webmvc
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -55,4 +58,5 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	maxParallelForks = 1
 }

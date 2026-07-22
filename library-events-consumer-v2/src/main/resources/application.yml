@@ -1,6 +1,12 @@
 server:
   port: ${SERVER_PORT:8081}
 
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/mydatabase}
