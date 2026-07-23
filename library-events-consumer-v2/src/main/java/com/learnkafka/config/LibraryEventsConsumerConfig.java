@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerContainerFactory;
@@ -87,6 +88,12 @@ public class LibraryEventsConsumerConfig {
         //     log.warn(message, ex);
         // });
         errorHandler.setRetryListeners(retryListener());
+
+        errorHandler.addNotRetryableExceptions(
+                IllegalArgumentException.class,
+                NullPointerException.class,
+                DataIntegrityViolationException.class
+        );
         return errorHandler;
     }
 
