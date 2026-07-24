@@ -33,3 +33,13 @@ spring:
         spring.json.trusted.packages: "com.learnkafka.model"
         spring.json.value.default.type: "com.learnkafka.model.LibraryEventDto"
         spring.json.use.type.headers: false
+    producer:
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+app:
+  kafka:
+    recovery:
+      mode: failure-table

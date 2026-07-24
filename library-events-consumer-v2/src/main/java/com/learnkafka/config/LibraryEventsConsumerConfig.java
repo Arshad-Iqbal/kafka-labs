@@ -1,9 +1,13 @@
 package com.learnkafka.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.learnkafka.entity.LibraryEventConsumerFailure;
+import com.learnkafka.repository.LibraryEventConsumerFailureRepository;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -11,10 +15,8 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
-import org.springframework.kafka.listener.ContainerProperties;
-import org.springframework.kafka.listener.DefaultErrorHandler;
-import org.springframework.kafka.listener.RetryListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.*;
 import org.springframework.util.backoff.ExponentialBackOff;
 
 @Configuration
@@ -47,8 +49,14 @@ public class LibraryEventsConsumerConfig {
         return factory;
     }
 
+    private static final String DLT_TOPIC = "library-events.DLT";
+
     /**
      * Configures exponential backoff retry behaviour for the Kafka listener error handler.
+     *
+     * <p>When {@code app.kafka.recovery.mode=dlt}, exhausted records are forwarded to
+     * {@value DLT_TOPIC} via a {@link DeadLetterPublishingRecoverer}. Otherwise the record
+     * is simply skipped after retries are exhausted.
      *
      * <p><b>Spring Kafka 4.x note:</b> {@code ExponentialBackOffWithMaxRetries} was removed as part
      * of a major simplification of the retry architecture in Spring Kafka 4.x. The framework dropped
@@ -67,28 +75,59 @@ public class LibraryEventsConsumerConfig {
      *   ────────┼──────
      *   Retry 1 │  1 s
      *   Retry 2 │  2 s
-     *   Stop    │  record skipped
+     *   Stop    │  record forwarded to DLT (if mode=dlt) or skipped
      * </pre>
      */
     @Bean
-    public DefaultErrorHandler defaultErrorHandler() {
+    public DefaultErrorHandler defaultErrorHandler(
+            @Value("${app.kafka.recovery.mode:none}") String recoveryMode,
+            KafkaTemplate<Object, Object> kafkaTemplate,
+            LibraryEventConsumerFailureRepository libraryEventFailureRepository) {
+
         var backOff = new ExponentialBackOff(1000L, 2.0);
         backOff.setMaxAttempts(2);
 
-        var errorHandler = new DefaultErrorHandler(backOff);
-        // Previous lambda-based RetryListener (kept for reference):
-        // errorHandler.setRetryListeners((record, ex, deliveryAttempt) -> {
-        //     var message = String.format(
-        //             "Retry attempt %d failed for topic=%s partition=%d offset=%d: %s",
-        //             deliveryAttempt,
-        //             record.topic(),
-        //             record.partition(),
-        //             record.offset(),
-        //             ex.getMessage());
-        //     log.warn(message, ex);
-        // });
-        errorHandler.setRetryListeners(retryListener());
+        ConsumerRecordRecoverer recoverer = switch (recoveryMode.toLowerCase()) {
+            case "dlt" -> {
+                log.info("Recovery mode=dlt — exhausted records will be forwarded to {}", DLT_TOPIC);
+                yield new DeadLetterPublishingRecoverer(kafkaTemplate,
+                        (record, ex) -> new TopicPartition(DLT_TOPIC, record.partition()));
+            }
+            case "failure-table" -> {
+                log.info("Recovery mode=failure-table — exhausted records will be persisted to library_event_consumer_failure table");
+                yield (record, ex) -> {
+                    log.error("Persisting failed record to library_event_consumer_failure table. Topic={}, Partition={}, Offset={}",
+                            record.topic(), record.partition(), record.offset(), ex);
+                    var failure = new LibraryEventConsumerFailure(
+                            record.topic(),
+                            record.partition(),
+                            record.offset(),
+                            record.key() != null ? record.key().toString() : null,
+                            record.value() != null ? record.value().toString() : null,
+                            ex.getClass().getName(),
+                            ex.getMessage()
+                    );
+                    libraryEventFailureRepository.save(failure);
+                    log.info("Persisted consumer failure record: {}", failure);
+                };
+            }
+            case "log_skip" -> {
+                log.info("Recovery mode=log_skip — exhausted records will be logged and skipped");
+                yield (ConsumerRecordRecoverer) (record, ex) ->
+                        log.error("Recovery: skipping failed record. Topic={}, Partition={}, Offset={}, Exception={}",
+                                record.topic(), record.partition(), record.offset(), ex.getMessage());
+            }
+            default -> {
+                log.info("Recovery mode={} — exhausted records will be skipped (no recovery)", recoveryMode);
+                yield null;
+            }
+        };
 
+        var errorHandler = recoverer != null
+                ? new DefaultErrorHandler(recoverer, backOff)
+                : new DefaultErrorHandler(backOff);
+
+        errorHandler.setRetryListeners(retryListener());
         errorHandler.addNotRetryableExceptions(
                 IllegalArgumentException.class,
                 NullPointerException.class,
