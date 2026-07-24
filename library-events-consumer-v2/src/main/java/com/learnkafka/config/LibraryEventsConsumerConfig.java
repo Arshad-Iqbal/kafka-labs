@@ -19,6 +19,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.*;
 import org.springframework.util.backoff.ExponentialBackOff;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 @Configuration
 @EnableKafka
 public class LibraryEventsConsumerConfig {
@@ -123,7 +126,8 @@ public class LibraryEventsConsumerConfig {
                             record.key() != null ? record.key().toString() : null,
                             record.value() != null ? record.value().toString() : null,
                             ex.getClass().getName(),
-                            ex.getMessage()
+                            ex.getMessage(),
+                            toStackTraceString(ex)
                     );
                     libraryEventFailureRepository.save(failure);
                     log.info("Persisted consumer failure record: {}", failure);
@@ -141,7 +145,8 @@ public class LibraryEventsConsumerConfig {
                             record.key() != null ? record.key().toString() : null,
                             record.value() != null ? record.value().toString() : null,
                             ex.getClass().getName(),
-                            ex.getMessage()
+                            ex.getMessage(),
+                            toStackTraceString(ex)
                     );
                     libraryEventFailureRepository.save(failure);
                     log.info("Persisted consumer failure record: {}", failure);
@@ -181,6 +186,12 @@ public class LibraryEventsConsumerConfig {
                         deliveryAttempt, record.topic(), record.partition(), record.offset(), ex.getMessage(), ex);
             }
         };
+    }
+
+    private static String toStackTraceString(Throwable ex) {
+        StringWriter sw = new StringWriter();
+        ex.printStackTrace(new PrintWriter(sw));
+        return sw.toString();
     }
 }
 

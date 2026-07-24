@@ -33,6 +33,9 @@ public class LibraryEventConsumerFailure {
     @Column(name = "exception_message", columnDefinition = "TEXT")
     private String exceptionMessage;
 
+    @Column(name = "stack_trace", columnDefinition = "TEXT")
+    private String stackTrace;
+
     @Column(name = "failed_at", nullable = false, updatable = false)
     private LocalDateTime failedAt;
 
@@ -46,7 +49,8 @@ public class LibraryEventConsumerFailure {
 
     public LibraryEventConsumerFailure(String topic, Integer partition, Long offsetValue,
                                        String recordKey, String recordValue,
-                                       String exceptionClass, String exceptionMessage) {
+                                       String exceptionClass, String exceptionMessage,
+                                       String stackTrace) {
         this.topic = topic;
         this.partition = partition;
         this.offsetValue = offsetValue;
@@ -54,6 +58,7 @@ public class LibraryEventConsumerFailure {
         this.recordValue = recordValue;
         this.exceptionClass = exceptionClass;
         this.exceptionMessage = exceptionMessage;
+        this.stackTrace = stackTrace;
     }
 
     public Long getId() { return id; }
@@ -64,6 +69,7 @@ public class LibraryEventConsumerFailure {
     public String getRecordValue() { return recordValue; }
     public String getExceptionClass() { return exceptionClass; }
     public String getExceptionMessage() { return exceptionMessage; }
+    public String getStackTrace() { return stackTrace; }
     public LocalDateTime getFailedAt() { return failedAt; }
 
     @Override
