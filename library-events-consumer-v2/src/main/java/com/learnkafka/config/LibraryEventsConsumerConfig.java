@@ -93,6 +93,42 @@ public class LibraryEventsConsumerConfig {
                 yield new DeadLetterPublishingRecoverer(kafkaTemplate,
                         (record, ex) -> new TopicPartition(DLT_TOPIC, record.partition()));
             }
+            /**
+             * BOTH recovery mode:
+             *
+             * After all retry attempts are exhausted, a custom ConsumerRecordRecoverer
+             * performs two recovery actions for the failed record:
+             *
+             * 1. Delegates to DeadLetterPublishingRecoverer to publish the record to the DLT.
+             * 2. Persists the failed record and exception details to the failure table.
+             *
+             * The lambda itself acts as the ConsumerRecordRecoverer passed to
+             * DefaultErrorHandler. When recovery is triggered, DefaultErrorHandler invokes
+             * this recoverer's accept(record, exception) method.
+             *
+             * Note: Publishing to Kafka and saving to the database are two independent
+             * operations and are not atomic in this implementation.
+             */
+            case "both" -> {
+                log.info("Recovery mode=both — exhausted records will be forwarded to {} AND persisted to library_event_consumer_failure table", DLT_TOPIC);
+                var dltRecoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
+                        (record, ex) -> new TopicPartition(DLT_TOPIC, record.partition()));
+                yield (record, ex) -> {
+                    dltRecoverer.accept(record, ex);
+                    log.info("DeadLetterPublishingRecoverer completed — now persisting to library_event_consumer_failure table");
+                    var failure = new LibraryEventConsumerFailure(
+                            record.topic(),
+                            record.partition(),
+                            record.offset(),
+                            record.key() != null ? record.key().toString() : null,
+                            record.value() != null ? record.value().toString() : null,
+                            ex.getClass().getName(),
+                            ex.getMessage()
+                    );
+                    libraryEventFailureRepository.save(failure);
+                    log.info("Persisted consumer failure record: {}", failure);
+                };
+            }
             case "failure-table" -> {
                 log.info("Recovery mode=failure-table — exhausted records will be persisted to library_event_consumer_failure table");
                 yield (record, ex) -> {
